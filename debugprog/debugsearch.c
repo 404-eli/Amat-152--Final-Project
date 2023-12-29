@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <conio.h>
 
 // Trim leading and trailing whitespaces from a string
 void trim_whitespace(char *str) {
@@ -23,17 +24,17 @@ void trim_whitespace(char *str) {
     str[i - start] = '\0';
 }
 
-int main() {
+void searchrecords() {
     FILE *file = fopen("tenant_records.txt", "r");
 
     if (file == NULL) {
         printf("Error opening the file.\n");
-        return 1;
     }
 
     char username_search[256];
 
     // Get input for search
+    system("cls");
     printf("Enter username: ");
     fgets(username_search, sizeof(username_search), stdin);
     username_search[strcspn(username_search, "\n")] = '\0';  // Remove the newline character
@@ -43,7 +44,6 @@ int main() {
     if (fgets(line, sizeof(line), file) == NULL) {
         printf("Error reading the header.\n");
         fclose(file);
-        return 1;
     }
 
     // Search for the record
@@ -56,6 +56,8 @@ int main() {
         char *electricity = strtok(NULL, ",");
         char *water = strtok(NULL, ",");
         char *days_to_pay = strtok(NULL, ",");
+        float total_payment = atof(strtok(NULL, ","));  // Retrieve total_payment as a float
+
 
         // Trim whitespaces from the found record values
         trim_whitespace(record_username);
@@ -63,10 +65,10 @@ int main() {
         // Compare with the provided username
         if (strcmp(record_username, username_search) == 0) {
             // Display the found record in a single line
-        printf("%-15s%-15s%-15s%-18s%-10s%-10s\n", "Username", "Room Number", "Room Rate", "Num of Tenants", "Bills", "Days to Pay");
+        printf("%-15s%-15s%-15s%-18s%-10s%-10s%15s\n", "Username", "Room Number", "Room Rate", "Num of Tenants", "Bill", "Days to Pay", "Total Payment");
         
         float bill = atof(electricity) + atof(water);
-        printf("%-15s%-15s%-15s%-18s%-10.2f%-15s\n", record_username, room_number, room_rate, num_of_tenants, electricity, water, days_to_pay);
+        printf("%-15s%-15s%-15s%-18s%-10.2f%-15s%8.2f\n", record_username, room_number, room_rate, num_of_tenants, bill, days_to_pay, total_payment);
             record_found = 1;
             break;
         }
@@ -77,6 +79,11 @@ int main() {
     }
 
     fclose(file);
+    printf("\nEnter any key to continue.");
+    getch();
+}
 
+int main() {
+    searchrecords();
     return 0;
 }
