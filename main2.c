@@ -478,7 +478,7 @@ void payment(){
     fclose(file);
 }
 
-<<<<<<< Updated upstream
+
 //DELETING RECORDS---------------------------------------------------------------------------------------------------------
 
 
@@ -566,6 +566,8 @@ void deleterecords() {
     int counter = 0;
 
     // Get input for file names and data to remove
+    system("cls");
+    displpayMessage();
     getInput(inputFile, sizeof(inputFile), "\n Enter the input file name", ".txt or .csv");
     getInput(outputFile, sizeof(outputFile), "Enter the output file name", ".txt or .csv");
     getInputWithoutExtension(dataToRemove, sizeof(dataToRemove), "Enter the data to remove");
@@ -586,7 +588,10 @@ void deleterecords() {
 
     if (counter >= 5) {
         printf("Maximum attempts reached!\n");
-=======
+    }
+}
+
+//=======
 void addBill(){
     FILE *file = fopen("tenant_records.txt", "r");
 
@@ -599,6 +604,7 @@ void addBill(){
 
     // Get input for search
     system("cls");
+    displpayMessage();
     printf("\nEnter username: ");
     fgets(username_search, sizeof(username_search), stdin);
     username_search[strcspn(username_search, "\n")] = '\0';  // Remove the newline character
@@ -662,12 +668,12 @@ void addBill(){
     if (!record_found) {
         printf("Record not found.\n");
         remove("temp_records.txt");  // Remove the temporary file if record not found
+        getch();
     }
     else{
     // Remove the original file and rename the temporary file to the original file
     remove("tenant_records.txt");
     rename("temp_records.txt", "tenant_records.txt");
->>>>>>> Stashed changes
     }
 }
 
@@ -695,12 +701,13 @@ void trim_whitespace(char *str) {
 
     str[i - start] = '\0';
 }
-<<<<<<< Updated upstream
-=======
+
+//<<<<<<< Updated upstream
+//=======
 
 
 //Analysis: remove water bill and electricity bill merge it to total payment column
 //Do not display how many tenants in each room
 //
 //Bugs: cannot modify data
->>>>>>> Stashed changes
+//>>>>>>> Stashed changes
