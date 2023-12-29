@@ -488,7 +488,6 @@ void payment(){
 
 //DELETING RECORDS---------------------------------------------------------------------------------------------------------
 
-
 // Function to get input without extension
 void getInputWithoutExtension(char *input, size_t size, const char *prompt) {
     printf("%s: ", prompt);
@@ -567,17 +566,17 @@ void removeDataFromFile(const char *inputFile, const char *outputFile, const cha
 // Function to handle the deletion of records
 void deleterecords() {
     char inputFile[MAX_LINE_LENGTH];
-    char outputFile[MAX_LINE_LENGTH];
     char dataToRemove[MAX_LINE_LENGTH];
     char password[20];
     int counter = 0;
 
-    // Get input for file names and data to remove
-    system("cls");
-    displayMessage();
-    getInput(inputFile, sizeof(inputFile), "\n Enter the input file name", ".txt or .csv");
-    getInput(outputFile, sizeof(outputFile), "Enter the output file name", ".txt or .csv");
+    // Get input for the input file name and data to remove
+    getInput(inputFile, sizeof(inputFile), "Enter the input file name", ".txt or .csv");
     getInputWithoutExtension(dataToRemove, sizeof(dataToRemove), "Enter the data to remove");
+
+    // Generate the output file name based on the input file name
+    char outputFile[MAX_LINE_LENGTH];
+    snprintf(outputFile, sizeof(outputFile), "%s", inputFile);
 
     // Prompt for admin password with limited attempts
     do {
@@ -597,7 +596,6 @@ void deleterecords() {
         printf("Maximum attempts reached!\n");
     }
 }
-
 //=======
 void addBill(){
     FILE *file = fopen("tenant_records.txt", "r");
