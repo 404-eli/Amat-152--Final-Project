@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <conio.h>
 
 void payment();
 void trim_whitespace(char *str);
@@ -28,17 +29,21 @@ void payment() {
     username_search[strcspn(username_search, "\n")] = '\0';  // Remove the newline character
 
     // Skip the first line (header)
-    char c;
-    while ((c = fgetc(file)) != '\n' && c != EOF) {
-        fputc(c, tempFile);
+    char line[256];
+    if (fgets(line, sizeof(line), file) == NULL) {
+        printf("Error reading the header.\n");
+        fclose(file);
+        fclose(tempFile);
+        return;
     }
-    fputc('\n', tempFile);
+
+    fprintf(tempFile, "%s", line);  // Write the header to the temp file
 
     // Search for the record
     int record_found = 0;
 
-    while (fgets(username_search, sizeof(username_search), file) != NULL) {
-        char *record_username = strtok(username_search, ",");
+    while (fgets(line, sizeof(line), file) != NULL) {
+        char *record_username = strtok(line, ",");
         char *room_number = strtok(NULL, ",");
         char *room_rate = strtok(NULL, ",");
         char *num_of_tenants = strtok(NULL, ",");
@@ -66,26 +71,24 @@ void payment() {
 
             // Deduct payment_amount from total_payment
             total_payment -= payment_amount;
-
-            // Update the total_payment in the temporary file
-            fprintf(tempFile, "%s, %s, %s, %s, %s, %s, %s, %.2f\n",
-                    record_username, room_number, room_rate, num_of_tenants, electricity, water, days_to_pay, total_payment);
-        } else {
-            // Copy the line as is to the temporary file
-            fprintf(tempFile, "%s", username_search);
         }
-    }
 
-    if (!record_found) {
-        printf("Record not found.\n");
+        // Write the line as is to the temporary file
+        fprintf(tempFile, "%s,%s,%s,%s,%s,%s,%s,%.2f\n", record_username, room_number, room_rate, num_of_tenants, electricity, water, days_to_pay, total_payment);
     }
 
     fclose(file);
     fclose(tempFile);
 
-    // Remove the original file and rename the temporary file to the original file
-    remove("tenant_records.txt");
-    rename("temp_records.txt", "tenant_records.txt");
+    if (!record_found) {
+        printf("Record not found.\n");
+        remove("temp_records.txt");  // Remove the temporary file if record not found
+        getch();
+    } else {
+        // Remove the original file and rename the temporary file to the original file
+        remove("tenant_records.txt");
+        rename("temp_records.txt", "tenant_records.txt");
+    }
 }
 
 void trim_whitespace(char *str) {
