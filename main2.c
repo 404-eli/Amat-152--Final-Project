@@ -23,9 +23,9 @@ void addNextMonthRecord();
 void searchrecords();//done
 void trim_whitespace(char *str);//remove later
 void listrecords();//done
-void payment();
-void modifyrecords();
-void addBill();
+void payment();//starting
+void modifyrecords();//idk if apilon ba ni 
+void addBill();//done
 void tryAgain();//done
 
 //deleterecord funcs
@@ -402,10 +402,12 @@ void searchrecords() {
 }
 
 void payment(){
-    FILE *file = fopen("tenant_records.txt", "r+");
+    FILE *file = fopen("tenant_records.txt", "r");
+    FILE *tempFile = fopen("temp_records.txt", "w");
 
-    if (file == NULL) {
-        printf("Error opening the file.\n");
+    if (file == NULL || tempFile == NULL) {
+        printf("Error opening the file(s).\n");
+        return;
     }
 
     char username_search[256];
@@ -420,11 +422,14 @@ void payment(){
     if (fgets(line, sizeof(line), file) == NULL) {
         printf("Error reading the header.\n");
         fclose(file);
+        fclose(tempFile);
+        return;
     }
+
+    fprintf(tempFile, "%s", line);  // Write the header to the temp file
 
     // Search for the record
     int record_found = 0;
-    long int position = ftell(file); // Record the position before the loop
 
     while (fgets(line, sizeof(line), file) != NULL) {
         char *record_username = strtok(line, ",");
@@ -443,7 +448,7 @@ void payment(){
         if (strcmp(record_username, username_search) == 0) {
             // Display the found record along with total_payment
             printf("%-15s%-15s%-15s%-18s%-10s%-10s%-20s\n", "Username", "Room Number", "Room Rate", "Num of Tenants", "Bill", "Days to Pay", "Total Payment");
-            
+
             float bill = atof(electricity) + atof(water);
             printf("%-15s%-15s%-15s%-18s%-10.2f%-15s%-20.2f\n", record_username, room_number, room_rate, num_of_tenants, bill, days_to_pay, total_payment);
             record_found = 1;
@@ -455,27 +460,24 @@ void payment(){
 
             // Deduct payment_amount from total_payment
             total_payment -= payment_amount;
-            // printf("Remaining balance after payment: %.2f\n", total_payment);
-
-            // Move the file pointer to the position before the loop
-            fseek(file, position, SEEK_SET);
-
-            // Update the total_payment in the file
-            fprintf(file, "%s, %s, %s, %s, %s, %s, %s, %.2f\n",
-                    record_username, room_number, room_rate, num_of_tenants, electricity, water, days_to_pay, total_payment);
-
-            break;
         }
 
-        // Record the position after each line read
-        position = ftell(file);
-    }
-
-    if (!record_found) {
-        printf("Record not found.\n");
+        // Write the line as is to the temporary file
+        fprintf(tempFile, "%s,%s,%s,%s,%s,%s,%s,%.2f\n", record_username, room_number, room_rate, num_of_tenants, electricity, water, days_to_pay, total_payment);
     }
 
     fclose(file);
+    fclose(tempFile);
+
+    if (!record_found) {
+        printf("Record not found.\n");
+        remove("temp_records.txt");  // Remove the temporary file if record not found
+        getch();
+    } else {
+        // Remove the original file and rename the temporary file to the original file
+        remove("tenant_records.txt");
+        rename("temp_records.txt", "tenant_records.txt");
+    }
 }
 
 
