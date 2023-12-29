@@ -35,8 +35,6 @@ void removeDataFromFile(const char *inputFile, const char *outputFile, const cha
 void deleterecords();
 
 
-
-
 int main(){
     int num;
 
