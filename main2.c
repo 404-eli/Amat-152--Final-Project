@@ -228,7 +228,7 @@ void listrecords() {
 
     system("cls");
     printf("\n%-15s%-15s%-15s%-18s%-10s%-15s%15s\n", "Username", "Room Number", "Room Rate", "Num of Tenants", "Bill", "Days to Pay", "Total Payment");
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < 100; i++) {
         printf("=");
     }
     printf("\n");
