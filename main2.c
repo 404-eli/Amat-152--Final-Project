@@ -8,7 +8,7 @@
 #define ADMIN_PASSWORD "admin123"
 #define MAX_LINE_LENGTH 100 //deleting records
 
-void displpayMessage();//done
+void displayMessage();//done
 void menu();//done
 void writeHeader(FILE *record, const char *header);//allowed
 //tenant panel functions
@@ -38,13 +38,13 @@ void deleterecords();
 int main(){
     int num;
 
-    displpayMessage();
+    displayMessage();
     menu();
 
     return 0;
 }
 
-void displpayMessage(){
+void displayMessage(){
     printf("\n\n**************************************************************");
 	printf("\n\t------WELCOME TO SILVA PAYMENT SYSTEM------");
 	printf("\n****************************************************************\n\n");
@@ -56,10 +56,11 @@ void menu(){
     while (1)
     {
         system("cls");
-        displpayMessage();
-        printf("\n\n A : Admin Panel\n T : Tenant Panel\n E : Exit\nChoice: ");
+        displayMessage();
+        printf("\n A : Admin Panel\n T : Tenant Panel\n E : Exit\nChoice: ");
         choice = getche();
         choice = toupper(choice);
+        fflush(stdin);
         switch (choice)
         {
         case 'A':
@@ -88,13 +89,14 @@ void adminPanel(){
 	while (1)
 	{
         system("cls");
-        displpayMessage();
+        displayMessage();
 		printf("\n Enter\n A : Add new Records.\n L : List of records\n N : Add next month record");
 		printf("\n B : Add Water & Electricty Bill\n M : Modify records.\n P : Payment");
 		printf("\n S : Searching records.");
 		printf("\n D : Delete records.\n O : Log out\nChoice: ");
 		choice=getche();
 		choice=toupper(choice);
+        fflush(stdin);
 		switch(choice)
 		{
 			case 'P':
@@ -139,7 +141,7 @@ void tenantPanel(){
     while (1)
     {
         system("cls");
-        displpayMessage();
+        displayMessage();
         printf(" B : See Balance\n O : Log out\nChoice: ");
         choice = getche();
         choice = toupper(choice);
@@ -172,7 +174,7 @@ void addTenantRecord() {
     }
 
     system("cls");
-    displpayMessage();
+    displayMessage();
     printf("Enter Username: ");
     scanf("%s", &tenant.username);
 
@@ -225,9 +227,9 @@ void listrecords() {
     }
 
     system("cls");
-    printf("\n%-15s%-15s%-15s%-18s%-10s%-15s%-15s\n", "Username", "Room Number", "Room Rate", "Num of Tenants", "Bill", "Days to Pay", "Total Payment");
-    for (i = 0; i < 95; i++) {
-        printf("-");
+    printf("\n%-15s%-15s%-15s%-18s%-10s%-15s%15s\n", "Username", "Room Number", "Room Rate", "Num of Tenants", "Bill", "Days to Pay", "Total Payment");
+    for (i = 0; i < 10; i++) {
+        printf("=");
     }
     printf("\n");
 
@@ -253,11 +255,11 @@ void listrecords() {
 
         float bill = atof(electricity) + atof(water);
 
-        printf("%-15s%-15s%-15s%-18s%-10.2f%-15s%-15s\n", username, room_number, room_rate, num_of_tenants, bill, days_to_pay, total_payment);
+        printf("%-15s%-15s%-15s%-18s%-10.2f%-15s%10s\n", username, room_number, room_rate, num_of_tenants, bill, days_to_pay, total_payment);
     }
 
-    for (i = 0; i < 95; i++) {
-        printf("-");
+    for (i = 0; i < 100; i++) {
+        printf("=");
     }
 
     fclose(record);
@@ -275,7 +277,7 @@ void logIn(){
 
     while (1)
     {
-        displpayMessage();
+        displayMessage();
         printf("Enter username: ");
         scanf("%s", &username_in);
         printf("Enter password: ");
@@ -322,7 +324,7 @@ void tryAgain(){
     while (1)
     {
         system("cls");
-        displpayMessage();
+        displayMessage();
         printf("Invalid Log-in information. Try again?\n[Y] Yes\n[N] No\nChoice: ");
         choice = getche();
         choice = toupper(choice);
@@ -354,7 +356,7 @@ void searchrecords() {
 
     // Get input for search
     system("cls");
-    displpayMessage();
+    displayMessage();
     printf("Enter username: ");
     fgets(username_search, sizeof(username_search), stdin);
     username_search[strcspn(username_search, "\n")] = '\0';  // Remove the newline character
@@ -376,6 +378,8 @@ void searchrecords() {
         char *electricity = strtok(NULL, ",");
         char *water = strtok(NULL, ",");
         char *days_to_pay = strtok(NULL, ",");
+        float total_payment = atof(strtok(NULL, "\n"));  // Retrieve total_payment as a float
+
 
         // Trim whitespaces from the found record values
         trim_whitespace(record_username);
@@ -383,10 +387,10 @@ void searchrecords() {
         // Compare with the provided username
         if (strcmp(record_username, username_search) == 0) {
             // Display the found record in a single line
-        printf("%-15s%-15s%-15s%-18s%-10s%-10s\n", "Username", "Room Number", "Room Rate", "Num of Tenants", "Bills", "Days to Pay");
+        printf("%-15s%-15s%-15s%-18s%-10s%-10s%15s\n", "Username", "Room Number", "Room Rate", "Num of Tenants", "Bill", "Days to Pay", "Total Payment");
         
         float bill = atof(electricity) + atof(water);
-        printf("%-15s%-15s%-15s%-18s%-10.2f%-15s\n", record_username, room_number, room_rate, num_of_tenants, bill, days_to_pay);
+        printf("%-15s%-15s%-15s%-18s%-10.2f%-15s%8.2f\n", record_username, room_number, room_rate, num_of_tenants, bill, days_to_pay, total_payment);
             record_found = 1;
             break;
         }
@@ -413,6 +417,7 @@ void payment(){
     char username_search[256];
 
     // Get input for search
+    displayMessage();
     printf("Enter username: ");
     fgets(username_search, sizeof(username_search), stdin);
     username_search[strcspn(username_search, "\n")] = '\0';  // Remove the newline character
@@ -439,7 +444,7 @@ void payment(){
         char *electricity = strtok(NULL, ",");
         char *water = strtok(NULL, ",");
         char *days_to_pay = strtok(NULL, ",");
-        float total_payment = atof(strtok(NULL, ","));  // Retrieve total_payment as a float
+        float total_payment = atof(strtok(NULL, "\n"));  // Retrieve total_payment as a float
 
         // Trim whitespaces from the found record values
         trim_whitespace(record_username);
@@ -447,10 +452,10 @@ void payment(){
         // Compare with the provided username
         if (strcmp(record_username, username_search) == 0) {
             // Display the found record along with total_payment
-            printf("%-15s%-15s%-15s%-18s%-10s%-10s%-20s\n", "Username", "Room Number", "Room Rate", "Num of Tenants", "Bill", "Days to Pay", "Total Payment");
+            printf("%-15s%-15s%-15s%-18s%-10s%-10s%15s\n", "Username", "Room Number", "Room Rate", "Num of Tenants", "Bill", "Days to Pay", "Total Payment");
 
             float bill = atof(electricity) + atof(water);
-            printf("%-15s%-15s%-15s%-18s%-10.2f%-15s%-20.2f\n", record_username, room_number, room_rate, num_of_tenants, bill, days_to_pay, total_payment);
+            printf("%-15s%-15s%-15s%-18s%-10.2f%-15s%10.2f\n", record_username, room_number, room_rate, num_of_tenants, bill, days_to_pay, total_payment);
             record_found = 1;
 
             // Get payment input from the user
@@ -569,7 +574,7 @@ void deleterecords() {
 
     // Get input for file names and data to remove
     system("cls");
-    displpayMessage();
+    displayMessage();
     getInput(inputFile, sizeof(inputFile), "\n Enter the input file name", ".txt or .csv");
     getInput(outputFile, sizeof(outputFile), "Enter the output file name", ".txt or .csv");
     getInputWithoutExtension(dataToRemove, sizeof(dataToRemove), "Enter the data to remove");
@@ -606,7 +611,7 @@ void addBill(){
 
     // Get input for search
     system("cls");
-    displpayMessage();
+    displayMessage();
     printf("\nEnter username: ");
     fgets(username_search, sizeof(username_search), stdin);
     username_search[strcspn(username_search, "\n")] = '\0';  // Remove the newline character
@@ -633,7 +638,7 @@ void addBill(){
         char *electricity = strtok(NULL, ",");
         char *water = strtok(NULL, ",");
         char *days_to_pay = strtok(NULL, ",");
-        float total_payment = atof(strtok(NULL, ","));  // Retrieve total_payment as a float
+        float total_payment = atof(strtok(NULL, "\n"));  // Retrieve total_payment as a float
 
         // Trim whitespaces from the found record values
         trim_whitespace(record_username);
@@ -641,10 +646,10 @@ void addBill(){
         // Compare with the provided username
         if (strcmp(record_username, username_search) == 0) {
             // Display the found record along with total_payment
-            printf("%-15s%-15s%-15s%-18s%-10s%-10s%-20s\n", "Username", "Room Number", "Room Rate", "Num of Tenants", "Bill", "Days to Pay", "Total Payment");
+            printf("%-15s%-15s%-15s%-18s%-10s%-10s%15s\n", "Username", "Room Number", "Room Rate", "Num of Tenants", "Bill", "Days to Pay", "Total Payment");
 
             float bill = atof(electricity) + atof(water);
-            printf("%-15s%-15s%-15s%-18s%-10.2f%-15s%-20.2f\n", record_username, room_number, room_rate, num_of_tenants, bill, days_to_pay, total_payment);
+            printf("%-15s%-15s%-15s%-18s%-10.2f%-15s%10.2f\n", record_username, room_number, room_rate, num_of_tenants, bill, days_to_pay, total_payment);
             record_found = 1;
 
             // Get new electricity and water bill values from the user
