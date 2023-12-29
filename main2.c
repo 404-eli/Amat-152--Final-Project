@@ -6,6 +6,7 @@
 #include "struct.h"
 
 #define ADMIN_PASSWORD "admin123"
+#define MAX_LINE_LENGTH 100 //deleting records
 
 void displpayMessage();//done
 void menu();//done
@@ -19,7 +20,6 @@ void logOut();//done
 void adminPanel();//done
 void addTenantRecord();//done
 void addNextMonthRecord();
-void deleterecords();
 void searchrecords();//done
 void trim_whitespace(char *str);//remove later
 void listrecords();//done
@@ -27,6 +27,15 @@ void payment();
 void modifyrecords();
 void addBill();
 void tryAgain();//done
+
+//deleterecord funcs
+void getInputWithoutExtension(char *input, size_t size, const char *prompt);
+void getInput(char *input, size_t size, const char *prompt, const char *fileExtensions);
+void removeDataFromFile(const char *inputFile, const char *outputFile, const char *dataToRemove);
+void deleterecords();
+
+
+
 
 int main(){
     int num;
@@ -112,7 +121,7 @@ void adminPanel(){
                 // addBill();
                 break;
 			case 'D':
-				// deleterecords();
+				deleterecords();
                 break;
 			case 'O':
                 system("cls");
@@ -471,6 +480,115 @@ void payment(){
     fclose(file);
 }
 
+//DELETING RECORDS---------------------------------------------------------------------------------------------------------
+
+
+// Function to get input without extension
+void getInputWithoutExtension(char *input, size_t size, const char *prompt) {
+    printf("%s: ", prompt);
+    fgets(input, size, stdin);
+
+    // Remove newline character if present
+    char *newline = strchr(input, '\n');
+    if (newline) {
+        *newline = '\0';
+    }
+}
+
+// Function to get input with valid file extension
+void getInput(char *input, size_t size, const char *prompt, const char *fileExtensions) {
+    do {
+        getInputWithoutExtension(input, size, prompt);
+
+        // Check if the input has a valid extension
+        char *dot = strrchr(input, '.');
+        if (dot && strchr(fileExtensions, *dot)) {
+            break;
+        } else {
+            printf("Invalid file extension. Please enter a valid file name with %s extension.\n", fileExtensions);
+        }
+    } while (1);
+}
+
+// Function to remove data from a file based on a specified condition
+void removeDataFromFile(const char *inputFile, const char *outputFile, const char *dataToRemove) {
+    FILE *originalFile, *tempFile;
+    char line[MAX_LINE_LENGTH];
+
+    // Open the original file for reading
+    originalFile = fopen(inputFile, "r");
+    if (originalFile == NULL) {
+        perror("Error opening the file");
+        exit(EXIT_FAILURE);
+    }
+
+    // Open a temporary file for writing
+    tempFile = fopen("temp_file.txt", "w");
+    if (tempFile == NULL) {
+        perror("Error creating temporary file");
+        fclose(originalFile);
+        exit(EXIT_FAILURE);
+    }
+
+    // Read each line from the original file
+    while (fgets(line, sizeof(line), originalFile) != NULL) {
+        // Check if the line contains data to be removed
+        if (strstr(line, dataToRemove) == NULL) {
+            // If not, write the line to the temporary file
+            fputs(line, tempFile);
+        }
+    }
+
+    // Close both files
+    fclose(originalFile);
+    fclose(tempFile);
+
+    // Delete the original file
+    if (remove(inputFile) != 0) {
+        perror("Error deleting the original file");
+        exit(EXIT_FAILURE);
+    }
+
+    // Rename the temporary file to the original file name
+    if (rename("temp_file.txt", outputFile) != 0) {
+        perror("Error renaming the temporary file");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Data removed successfully.\n");
+}
+
+// Function to handle the deletion of records
+void deleterecords() {
+    char inputFile[MAX_LINE_LENGTH];
+    char outputFile[MAX_LINE_LENGTH];
+    char dataToRemove[MAX_LINE_LENGTH];
+    char password[20];
+    int counter = 0;
+
+    // Get input for file names and data to remove
+    getInput(inputFile, sizeof(inputFile), "\n Enter the input file name", ".txt or .csv");
+    getInput(outputFile, sizeof(outputFile), "Enter the output file name", ".txt or .csv");
+    getInputWithoutExtension(dataToRemove, sizeof(dataToRemove), "Enter the data to remove");
+
+    // Prompt for admin password with limited attempts
+    do {
+        printf("Please enter the admin password: ");
+        scanf("%19s", password);
+
+        if (strcmp(password, "admin123") == 0) {
+            // Call the function to remove data from the file
+            removeDataFromFile(inputFile, outputFile, dataToRemove);
+        } else {
+            printf("Invalid Password! \n");
+            counter++;
+        }
+    } while (strcmp(password, "admin123") != 0 && counter < 5);
+
+    if (counter >= 5) {
+        printf("Maximum attempts reached!\n");
+    }
+}
 
 //additional functions
 
