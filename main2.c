@@ -19,6 +19,7 @@ void menu();//done
 void writeHeader(FILE *record, const char *header);//allowed
 int isUsernameExists(const char *username);
 void trim_whitespace(char *str);//remove later
+void toUpperCase(char *str);
 
 //tenant panel functions----------------------------------------------------------------------------------------------------
 void tenantPanel();
@@ -45,9 +46,9 @@ void searchByUsername(const char *filename, const char *username);
 void searchrecords();
 int searchMonthly();
 
-
+//payment------------------------------------------------------------------------------------------------------------------------------------------------------------
+int payment_search();
 void payment();//starting
-void addBill();//done
 void tryAgain();//done
 
 //deleterecord funcs--------------------------------------------------------------------------------------------------------------
@@ -56,7 +57,7 @@ void getInput(char *input, size_t size, const char *prompt, const char *fileExte
 void removeDataFromFile(const char *inputFile, const char *outputFile, const char *dataToRemove);
 void deleterecords();
 
-
+//main functions-----------------------------------------------------------------------------------------------------------
 int main(){
 
     displayMessage();
@@ -111,10 +112,10 @@ void adminPanel(){
 	{
         system("cls");
         displayMessage();
-		printf("\n MAIN MENU: \n A : Add new Tenant Record.\n L : List of records\n S : Searching records.");
-		printf("\n P : Payment");
-		printf("\n N : Add Monthly Records");
-		printf("\n D : Delete records.\n O : Log out\nChoice: ");
+		printf("\n MAIN MENU: \n\n Add records:\n A : Add new Tenant Record.\n N : Add Monthly Records.\n");
+        printf("\n Find existing records:\n L : List of records\n S : Searching records");
+		printf("\n\n P : Payment");
+		printf("\n\n D : Delete records.\n O : Log out\nChoice: ");
 		choice=getche();
 		choice=toupper(choice);
         fflush(stdin);
@@ -183,9 +184,7 @@ void addTenantRecord() {
     scanf("%s", tenant.roomNumber);
 
     // Convert room number to uppercase
-    for (int i = 0; tenant.roomNumber[i]; i++) {
-        tenant.roomNumber[i] = toupper(tenant.roomNumber[i]);
-    }
+    toUpperCase(tenant.roomNumber);
 
     printf("Enter Room Rate: ");
     scanf("%d", &tenant.roomRate);//aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa I edited from f to d
@@ -208,7 +207,7 @@ void addTenantRecord() {
     }
 
     // Append the record with the new total_payment column
-    fprintf(record, "%s, %s, %.2d, %.2f, %.2f, %d, %.2f\n",
+    fprintf(record, "%s, %s, %d, %.2f, %.2f, %d, %.2f\n",
             tenant.username, tenant.roomNumber, tenant.roomRate, tenant.waterBill, tenant.electricityBill, tenant.daysToPay, total_payment);
 
     fflush(stdin);
@@ -273,27 +272,32 @@ int displayList() {
 void printFile() {
     int i;
     char userFile[MAX_FILE_NAME];
+    char month[10];
+    char year[5];
+    char buffer[256];
+
     FILE *file;
 
-    printf("Enter the name of the file to print: ");
-    scanf("%s", userFile);
+    printf("\nEnter month: ");
+    scanf("%s", month);
+    toUpperCase(month);
+    printf("Enter year: ");
+    scanf("%s", year);
+
+    // Construct the file name with the format "monthyear.txt"
+    snprintf(userFile, sizeof(userFile), "%s%s.txt", month, year);
 
     file = fopen(userFile, "r");
-
     if (file == NULL) {
         printf("Error opening file: %s\n", userFile);
     }
     else{
         system("cls");
         displayMessage();
+        printf("\n\n\t\tPrinting %s %s.....\n\n", month, year);
         printf("\n%-15s%-15s%-15s%-15s%-15s%15s\n", "Username", "Room Number", "Room Rate", "Bills", "Days to Pay", "Total Payment");
-        for (i = 0; i < 100; i++) {
-            printf("=");
-        }
+        for (i = 0; i < 100; i++)printf("=");
         printf("\n");
-
-        char buffer[256];
-
         // Skip the first line (header)
         if (fgets(buffer, sizeof(buffer), file) == NULL) {
             printf("Error reading the header.\n");
@@ -315,9 +319,7 @@ void printFile() {
             printf("%-15s%-15s%-15s%-15.2f%-15s%10s\n", username, room_number, room_rate, bill, days_to_pay, total_payment);
         }
 
-        for (i = 0; i < 100; i++) {
-            printf("=");
-        }
+        for (i = 0; i < 100; i++)printf("=");
     }
 
     fclose(file);
@@ -336,10 +338,9 @@ void listrecords() {
 
     system("cls");
     displayMessage();
+    printf("\n\n\t\tTenant Database\n\n");
     printf("\n%-15s%-15s%-15s%-15s%15s\n", "Username", "Room Number", "Room Rate", "Days to Pay", "Total Payment");
-    for (i = 0; i < 100; i++) {
-        printf("=");
-    }
+    for (i = 0; i < 100; i++)printf("=");
     printf("\n");
 
     char line[256]; // Adjust the size based on your file's maximum line length
@@ -364,9 +365,7 @@ void listrecords() {
         printf("%-15s%-15s%-15s%-15s%10s\n", username, room_number, room_rate, days_to_pay, total_payment);
     }
 
-    for (i = 0; i < 100; i++) {
-        printf("=");
-    }
+    for (i = 0; i < 100; i++)printf("=");
 
     fclose(record);
     getchar(); // Consume newline character
@@ -407,6 +406,8 @@ int searchFile() {
 }
 
 void searchrecords() {
+    int record_found = 0, i;
+
     FILE *file = fopen("tenant_records.txt", "r");
 
     if (file == NULL) {
@@ -420,12 +421,10 @@ void searchrecords() {
         // Get input for search
         system("cls");
         displayMessage();
+        printf("\n\n\t\tTenant Database\n\n");
         printf("\nEnter username: ");
         scanf("%s", username_search);
-
-        for (int i = 0; username_search[i]; i++) {
-            username_search[i] = toupper(username_search[i]);
-        }
+        toUpperCase(username_search);
 
         // Skip the first line (header)
         char line[256];
@@ -435,8 +434,10 @@ void searchrecords() {
             return;
         }
 
-        // Search for the record
-        int record_found = 0;
+        printf("\n\n%-15s%-15s%-15s%-10s%-10s%15s\n", "Username", "Room Number", "Room Rate", "Bill", "Days to Pay", "Total Payment");
+        for (i = 0; i < 90; i++)printf("=");
+        printf("\n");
+
         while (fgets(line, sizeof(line), file) != NULL) {
             char *record_username = strtok(line, ",");
             char *room_number = strtok(NULL, ",");
@@ -452,7 +453,6 @@ void searchrecords() {
             // Compare with the provided username
             if (strcmp(record_username, username_search) == 0) {
                 // Display the found record in a single line
-                printf("%-15s%-15s%-15s%-10s%-10s%15s\n", "Username", "Room Number", "Room Rate", "Bill", "Days to Pay", "Total Payment");
 
                 float bill = atof(electricity) + atof(water);
                 printf("%-15s%-15s%-15s%-10.2f%-15s%8.2f\n", record_username, room_number, room_rate, bill, days_to_pay, total_payment);
@@ -461,8 +461,9 @@ void searchrecords() {
             }
         }
             if (!record_found) {
-            printf("Record not found.\n");
+            printf("\nRecord not found.\n");
         }
+        for (i = 0; i < 90; i++)printf("=");
     }
 
     fclose(file);
@@ -471,20 +472,29 @@ void searchrecords() {
 }
 
 int searchMonthly() {
+    char month[10];
+    char year[5];
+    char filename[MAX_FILENAME_LEN];
+    char username[MAX_USERNAME_LEN];
+
     system("cls");
     displayMessage();
     printAvailableFiles();
-    char filename[MAX_FILENAME_LEN];
-    printf("\nEnter the filename: ");
-    scanf("%s", filename);
+    
+    printf("\nEnter month: ");
+    scanf("%s", month);
+    toUpperCase(month);
+    printf("Enter year: ");
+    scanf("%s", year);
 
-    char username[MAX_USERNAME_LEN];
+    snprintf(filename, sizeof(filename), "%s%s.txt", month, year);
+    
+    system("cls");
+    displayMessage();
+    printf("\n\t\tSearching in %s %s...\n\n", month, year);
     printf("Enter the username to search for: ");
     scanf("%s", username);
-
-    for (int i = 0; username[i]; i++) {
-        username[i] = toupper(username[i]);
-    }
+    toUpperCase(username);
 
     searchByUsername(filename, username);
 
@@ -492,6 +502,7 @@ int searchMonthly() {
 }
 
 void searchByUsername(const char *filename, const char *username) {
+    int i, record_found = 0;
     FILE *file = fopen(filename, "r");
 
     if (file == NULL) {
@@ -504,10 +515,11 @@ void searchByUsername(const char *filename, const char *username) {
         fclose(file);
         return;
     }
-
-    // Search for the record
     printf("\n\n");
-    int record_found = 0;
+    printf("%-15s%-15s%-15s%-10s%-10s%15s\n", "Username", "Room Number", "Room Rate", "Bill", "Days to Pay", "Total Payment");
+    for (i = 0; i < 90; i++) printf("=");
+    printf("\n");
+
     while (fgets(line, sizeof(line), file) != NULL) {
         char *record_username = strtok(line, ",");
         char *room_number = strtok(NULL, ",");
@@ -522,8 +534,7 @@ void searchByUsername(const char *filename, const char *username) {
         // Compare with the provided username
         if (strcmp(record_username, username) == 0) {
             // Display the found record in a single line
-            printf("%-15s%-15s%-15s%-10s%-10s%15s\n", "Username", "Room Number", "Room Rate", "Bill", "Days to Pay", "Total Payment");
-
+        
             float bill = atof(electricity) + atof(water);
             printf("%-15s%-15s%-15s%-10.2f%-15s%8.2f\n", record_username, room_number, room_rate, bill, days_to_pay, total_payment);
             record_found = 1;
@@ -533,8 +544,8 @@ void searchByUsername(const char *filename, const char *username) {
         if (!record_found) {
             printf("Username not found in %s\n", filename);
         }
+        for (i = 0; i < 90; i++)printf("=");
     }
-
     fclose(file);
     printf("\n\nPress any key to continue.");
     getch();
@@ -559,89 +570,142 @@ void printAvailableFiles() {
 
     fclose(fileContainer);
 }
+
 //END----------------------------------------------------------------------------------------------------------------------------------------
 
 /// PAYMENT FUNCTION-------------------------------------------------------------------------------------------------------
-void payment(){
-    FILE *file = fopen("tenant_records.txt", "r");
-    FILE *tempFile = fopen("temp_records.txt", "w");
+int payment_search(){
+    int choice;
 
-    if (file == NULL || tempFile == NULL) {
-        printf("Error opening the file(s).\n");
-        return;
-    }
+    do {
+        system("cls");
+        displayMessage();
+        printf("\nChoose an option:\n");
+        printf("1. Payment for month\n");
+        printf("2. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
 
-    char username_search[256];
-
-    // Get input for search
-    displayMessage();
-    printf("Enter username: ");
-    fgets(username_search, sizeof(username_search), stdin);
-    username_search[strcspn(username_search, "\n")] = '\0';  // Remove the newline character
-
-    for (int i = 0; username_search[i]; i++) {
-        username_search[i] = toupper(username_search[i]);
-    }
-
-    // Skip the first line (header)
-    char line[256];
-    if (fgets(line, sizeof(line), file) == NULL) {
-        printf("Error reading the header.\n");
-        fclose(file);
-        fclose(tempFile);
-        return;
-    }
-
-    fprintf(tempFile, "%s", line);  // Write the header to the temp file
-
-    // Search for the record
-    int record_found = 0;
-
-    while (fgets(line, sizeof(line), file) != NULL) {
-        char *record_username = strtok(line, ",");
-        char *room_number = strtok(NULL, ",");
-        char *room_rate = strtok(NULL, ",");
-        char *electricity = strtok(NULL, ",");
-        char *water = strtok(NULL, ",");
-        char *days_to_pay = strtok(NULL, ",");
-        float total_payment = atof(strtok(NULL, "\n"));  // Retrieve total_payment as a float
-
-        // Trim whitespaces from the found record values
-        trim_whitespace(record_username);
-
-        // Compare with the provided username
-        if (strcmp(record_username, username_search) == 0) {
-            // Display the found record along with total_payment
-            printf("%-15s%-15s%-15s%-10s%-10s%15s\n", "Username", "Room Number", "Room Rate", "Bill", "Days to Pay", "Total Payment");
-
-            float bill = atof(electricity) + atof(water);
-            printf("%-15s%-15s%-15s%-10.2f%-15s%10.2f\n", record_username, room_number, room_rate, bill, days_to_pay, total_payment);
-            record_found = 1;
-
-            // Get payment input from the user
-            float payment_amount;
-            printf("\nEnter payment amount: ");
-            scanf("%f", &payment_amount);
-
-            // Deduct payment_amount from total_payment
-            total_payment -= payment_amount;
+        switch (choice) {
+            case 1:
+                payment();//FOR MAIN RECORDS
+                break;
+            case 2:
+                printf("Exiting program. Goodbye!\n");
+                break;
+            default:
+                printf("Invalid choice. Please enter a valid option.\n");
         }
 
-        // Write the line as is to the temporary file
-        fprintf(tempFile, "%s,%s,%s,%s,%s,%s,%.2f\n", record_username, room_number, room_rate, electricity, water, days_to_pay, total_payment);
+    } while (choice != 2);
+
+    return 0;
+}
+
+void payment() {
+    char userFile[MAX_FILE_NAME];
+    char username_search[256];
+    char line[256];
+    char month[15];
+    char year[6];
+    int i, record_found = 0;
+
+    FILE *file, *tempFile;
+
+    tempFile = fopen("temp_records.txt", "w");
+    if (tempFile == NULL) {
+        perror("Error opening temp_records.txt for writing");
+        return;
     }
+    else{
+        system("cls");
+        displayMessage();
+        printAvailableFiles();
+        printf("\nEnter the month: ");
+        scanf("%s", month);
+        toUpperCase(month);
+        printf("Enter year: ");
+        scanf("%s", year);
 
-    fclose(file);
-    fclose(tempFile);
+        // Construct the file name with the format "monthyear.txt"
+        snprintf(userFile, sizeof(userFile), "%s%s.txt", month, year);
 
-    if (!record_found) {
-        printf("Record not found.\n");
-        remove("temp_records.txt");  // Remove the temporary file if record not found
-        getch();
-    } else {
-        // Remove the original file and rename the temporary file to the original file
-        remove("tenant_records.txt");
-        rename("temp_records.txt", "tenant_records.txt");
+        file = fopen(userFile, "r");
+        if (file == NULL) {
+            perror("Error opening the file");
+            fclose(tempFile);
+            return;
+        }
+
+        // Get input for search
+        system("cls");
+        displayMessage();
+        listrecords();
+        printf("Searching in %s %s.....\n", month, year);
+        printf("Enter username: ");
+        scanf("%s", username_search);
+        toUpperCase(username_search);
+
+        // Skip the first line (header)
+        if (fgets(line, sizeof(line), file) == NULL) {
+            printf("Error reading the header.\n");
+            fclose(file);
+            fclose(tempFile); 
+            return;
+        }
+
+        fprintf(tempFile, "%s", line);  // Write the header to the temp file
+
+        printf("\n%-15s%-15s%-15s%-10s%-10s%15s\n", "Username", "Room Number", "Room Rate", "Bill", "Days to Pay", "Total Payment");
+        for (i = 0; i < 90; i++)printf("=");
+
+        while (fgets(line, sizeof(line), file) != NULL) {
+            char *record_username = strtok(line, ",");
+            char *room_number = strtok(NULL, ",");
+            char *room_rate = strtok(NULL, ",");
+            char *electricity = strtok(NULL, ",");
+            char *water = strtok(NULL, ",");
+            char *days_to_pay = strtok(NULL, ",");
+            float total_payment = atof(strtok(NULL, "\n"));
+
+            // Trim whitespaces from the found record values
+            trim_whitespace(record_username);
+
+            // Compare with the provided username
+            if (strcmp(record_username, username_search) == 0) {
+                // Display the found record along with total_payment
+
+                float bill = atof(electricity) + atof(water);
+                printf("\n%-15s%-15s%-15s%-10.2f%-15s%10.2f\n", record_username, room_number, room_rate, bill, days_to_pay, total_payment);
+                for (i = 0; i < 90; i++)printf("=");
+                printf("\n");
+                record_found = 1;
+
+                // Get payment input from the user
+                float payment_amount;
+                printf("\nEnter payment amount: ");
+                scanf("%f", &payment_amount);
+
+                // Deduct payment_amount from total_payment
+                total_payment -= payment_amount;
+            }
+
+            // Write the line as is to the temporary file
+            fprintf(tempFile, "%s,%s,%s,%s,%s,%s,%.2f\n", record_username, room_number, room_rate, electricity, water, days_to_pay, total_payment);
+        }
+
+        fclose(file);
+        fclose(tempFile);
+
+        if (!record_found) {
+            printf("\nRecord not found.\n");
+            remove("temp_records.txt");
+            getch();
+        } else {
+            // Remove the original file and rename the temporary file to the original file
+            remove(userFile);
+            rename("temp_records.txt", userFile);
+        }
     }
 }
 
@@ -711,7 +775,7 @@ void removeDataFromFile(const char *inputFile, const char *outputFile, const cha
     // Delete the original file
     if (remove(inputFile) != 0) {
         perror("Error deleting the original file");
-        exit(EXIT_FAILURE);
+        return;
     }
 
     // Rename the temporary file to the original file name
@@ -734,6 +798,7 @@ void deleterecords() {
     system("cls");
     displayMessage();
     printf("\n");
+    printAvailableFiles();
     getInput(inputFile, sizeof(inputFile), "Enter the input file name", ".txt or .csv");
     getInputWithoutExtension(dataToRemove, sizeof(dataToRemove), "Enter the data to remove");
 
@@ -759,219 +824,107 @@ void deleterecords() {
         printf("Maximum attempts reached!\n");
     }
 }
-//END--------------------------------------------------------------------------------
+//END---------------------------------------------------------------------------------------------------------------------------
 
-/*
-//ADDBILL-------------------------------------------------------------------------------------------------------------------------
-void addBill(){
-    FILE *file = fopen("tenant_records.txt", "r");
-
-    if (file == NULL) {
-        printf("Error opening the file.\n");
-    }
-
-    char username_search[256];
-
-    // Get input for search
-    system("cls");
-    displayMessage();
-    printf("\nEnter username: ");
-    fgets(username_search, sizeof(username_search), stdin);
-    username_search[strcspn(username_search, "\n")] = '\0';  // Remove the newline character
-
-    for (int i = 0; username_search[i]; i++) {
-        username_search[i] = toupper(username_search[i]);
-    }
-
-    // Skip the first line (header)
-    char line[256];
-    if (fgets(line, sizeof(line), file) == NULL) {
-        printf("Error reading the header.\n");
-        fclose(file);
-        return;
-    }
-
-    // Search for the record
-    int record_found = 0;
-    FILE *tempFile = fopen("temp_records.txt", "w");
-
-    fprintf(tempFile, "%s", line);  // Write the header to the temp file
-
-    while (fgets(line, sizeof(line), file) != NULL) {
-        char *record_username = strtok(line, ",");
-        char *room_number = strtok(NULL, ",");
-        char *room_rate = strtok(NULL, ",");
-        char *electricity = strtok(NULL, ",");
-        char *water = strtok(NULL, ",");
-        char *days_to_pay = strtok(NULL, ",");
-        float total_payment = atof(strtok(NULL, "\n"));  // Retrieve total_payment as a float
-
-        // Trim whitespaces from the found record values
-        trim_whitespace(record_username);
-
-        // Compare with the provided username
-        if (strcmp(record_username, username_search) == 0) {
-            // Display the found record along with total_payment
-            printf("%-15s%-15s%-15s%-10s%-10s%15s\n", "Username", "Room Number", "Room Rate", "Bill", "Days to Pay", "Total Payment");
-
-            float bill = atof(electricity) + atof(water);
-            printf("%-15s%-15s%-15s%-10.2f%-15s%10.2f\n", record_username, room_number, room_rate, bill, days_to_pay, total_payment);
-            record_found = 1;
-
-            // Get new electricity and water bill values from the user
-            float new_electricity, new_water;
-            printf("\nEnter new electricity bill: ");
-            scanf("%f", &new_electricity);
-            printf("Enter new water bill: ");
-            scanf("%f", &new_water);
-
-            float new_bill = new_electricity + new_water;
-            float total_payment = new_bill + (atoi(room_rate) * atoi(days_to_pay));
-            // Append the modified record to the temp file
-            fprintf(tempFile, "%s,%s,%s,%.2f,%.2f,%s,%.2f\n", record_username, room_number, room_rate, new_electricity, new_water, days_to_pay, total_payment);
-        } else {
-            // Write the unchanged record to the temp file
-            fprintf(tempFile, "%s,%s,%s,%s,%s,%s,%.2f\n", record_username, room_number, room_rate, electricity, water, days_to_pay, total_payment);
-        }
-    }
-
-    fclose(file);
-    fclose(tempFile);
-
-    if (!record_found) {
-        printf("Record not found.\n");
-        remove("temp_records.txt");  // Remove the temporary file if record not found
-        getch();
-    }
-    else{
-    // Remove the original file and rename the temporary file to the original file
-    remove("tenant_records.txt");
-    rename("temp_records.txt", "tenant_records.txt");
-    }
-}
-//END------------------------------------------------------------------------------------------------------------------------------
-*/
 
 //Add Next Month Records--------------------------------------------------------------------------------------------------------------------------
-void AddNextMonth(){
-   FILE *file = fopen("tenant_records.txt", "r");
+void AddNextMonth() {
+    char month[10], year[5];
+    char fileName[50];
 
-    if (file == NULL) {
-        printf("\n\nError opening the file.\n");
-        printf("\nAny key to continue");
-        getch();
-    }
-    else{
+    FILE *file = fopen("tenant_records.txt", "r");
     FILE *newFile, *nameContainerFile;
 
-    // Get input for the month
-    char month[10];
-    system("cls");
-    displayMessage();
-    printf("\nEnter the month: ");
-    scanf("%s", month);
+    if (file == NULL) {
+        perror("\n\nError opening the file.\n");
+        printf("\nAny key to continue");
+        getch();
+    } else {
+        // Get input for the month
+        system("cls");
+        // displayMessage();
+        printf("\nEnter the month: ");
+        scanf("%s", month);
+        toUpperCase(month);
+        printf("Enter year: ");
+        scanf("%s", year);
 
-    for (int i = 0; month[i]; i++) {
-        month[i] = toupper(month[i]);
-    }
+        // Construct the file name with the format "monthyear.txt"
+        snprintf(fileName, sizeof(fileName), "%s%s.txt", month, year);
 
-    // Construct the file name with the format "month_tenant_records.txt"
-    char fileName[50];
-    snprintf(fileName, sizeof(fileName), "%s.txt", month);
+        // Open a new file for writing
+        newFile = fopen(fileName, "w");
+        if (newFile == NULL) {
+            perror("Error creating new file");
+        }
 
+        // Open the name container file for appending
+        nameContainerFile = fopen("name_container.txt", "a");
+        if (nameContainerFile == NULL) {
+            perror("Error opening name container file");
+            exit(EXIT_FAILURE);
+        }
 
-    //Create an option for bulk records--------------------------------------------------------------------------
+        char line[256];
 
+        // Skip the first line (header)
+        if (fgets(line, sizeof(line), file) == NULL) {
+            printf("Error reading the header.\n");
+            fclose(file);
+            return;
+        }
 
-    // Open a new file for writing
-    newFile = fopen(fileName, "w");
-    if (newFile == NULL) {
-        perror("Error creating new file");
-    }
+        // Write the header to the new file
+        fprintf(newFile, "%s", line);
 
-    char username_search[256];
+        // Iterate through all records in the file
+        while (fgets(line, sizeof(line), file) != NULL) {
+            char *record_username = strtok(line, ",");
+            char *room_number = strtok(NULL, ",");
+            char *room_rate = strtok(NULL, ",");
+            char *electricity = strtok(NULL, ",");
+            char *water = strtok(NULL, ",");
+            char *days_to_pay = strtok(NULL, ",");
+            float total_payment = atof(strtok(NULL, "\n"));  // Retrieve total_payment as a float
 
-    // Get input for search
-    printf("\nEnter username: ");
-    scanf("%s", username_search);
+            // Trim whitespaces from the found record values
+            trim_whitespace(record_username);
 
-    for (int i = 0; username_search[i]; i++) {
-        username_search[i] = toupper(username_search[i]);
-    }
-
-    // Skip the first line (header)
-    char line[256];
-    if (fgets(line, sizeof(line), file) == NULL) {
-        printf("Error reading the header.\n");
-        fclose(file);
-        return;
-    }
-
-        // Search for the record
-    int record_found = 0;
-
-    fprintf(newFile, "%s", line);  // Write the header to the temp file
-
-    while (fgets(line, sizeof(line), file) != NULL) {
-        char *record_username = strtok(line, ",");
-        char *room_number = strtok(NULL, ",");
-        char *room_rate = strtok(NULL, ",");
-        char *electricity = strtok(NULL, ",");
-        char *water = strtok(NULL, ",");
-        char *days_to_pay = strtok(NULL, ",");
-        float total_payment = atof(strtok(NULL, "\n"));  // Retrieve total_payment as a float
-
-        // Trim whitespaces from the found record values
-        trim_whitespace(record_username);
-
-            // Compare with the provided username
-        if (strcmp(record_username, username_search) == 0) {
-            // Display the found record along with total_payment
+            // Display the record details
             printf("%-15s%-15s%-15s%-10s%-10s%15s\n", "Username", "Room Number", "Room Rate", "Bill", "Days to Pay", "Total Payment");
-
             float bill = atof(electricity) + atof(water);
             printf("%-15s%-15s%-15s%-10.2f%-15s%10.2f\n", record_username, room_number, room_rate, bill, days_to_pay, total_payment);
-            record_found = 1;
 
             // Get new electricity and water bill values from the user
             float new_electricity, new_water;
-            printf("\nEnter new electricity bill: ");
+            int new_daystopay;
+            printf("\nEnter new electricity bill for %s: ", record_username);
             scanf("%f", &new_electricity);
-            printf("Enter new water bill: ");
+            printf("Enter new water bill for %s: ", record_username);
             scanf("%f", &new_water);
+            printf("Enter how many days %s would pay: ", record_username);
+            scanf("%d", &new_daystopay);
 
             float new_bill = new_electricity + new_water;
-            float total_payment = new_bill + (atoi(room_rate) * atoi(days_to_pay));
-            // Append the modified record to the temp file
-            fprintf(newFile, "%s,%s,%s,%.2f,%.2f,%s,%.2f\n", record_username, room_number, room_rate, new_electricity, new_water, days_to_pay, total_payment);
-        } else {
-            // Write the unchanged record to the temp file
-            fprintf(newFile, "%s,%s,%s,%s,%s,%s,%.2f\n", record_username, room_number, room_rate, electricity, water, days_to_pay, total_payment);
+            float new_total_payment = new_bill + (atof(room_rate) * new_daystopay);
+
+            // Append the modified record to the new file
+            fprintf(newFile, "%s,%s,%s,%.2f,%.2f,%d,%.2f\n", record_username, room_number, room_rate, new_electricity, new_water, new_daystopay, new_total_payment);
+
+            // Write the new file name to the name container file
+            fprintf(nameContainerFile, "%s\n", fileName);
         }
+
+        printf("\nNew file '%s' created successfully.\n", fileName);
+
+        // Close the files
+        fclose(file);
+        fclose(newFile);
+        fclose(nameContainerFile);
     }
-
-    printf("\nNew file '%s' created successfully.\n", fileName);
-
-    // Open the name container file for appending
-    nameContainerFile = fopen("name_container.txt", "a");
-    if (nameContainerFile == NULL) {
-        perror("Error opening name container file");
-        exit(EXIT_FAILURE);
-    }
-
-    // Write the new file name to the name container file
-    fprintf(nameContainerFile, "%s\n", fileName);
-
-    // Close the name container file
-    fclose(nameContainerFile);
-    fclose(file);
-    fclose(newFile);
-
-    fflush(stdout);
-    }
-
 }
 //END----------------------------------------------------------------------------------------------------------------------------
+
 
 //TENANT PANEL------------------------------------------------------------------------------------------------------------------------------
 void tenantPanel(){
@@ -1084,6 +1037,9 @@ void tryAgain(){
 }
 //END----------------------------------------------------------------------------------------------------------------------------------
 
+
+
+
 //additional functions----------------------------------------------------------------------------------------------------------------------
 int isUsernameExists(const char *username) {
     FILE *file = fopen("tenant_records.txt", "r");
@@ -1140,6 +1096,11 @@ void trim_whitespace(char *str) {
     str[i - start] = '\0';
 }
 
+void toUpperCase(char *str) {
+    for (int i = 0; str[i]; i++) {
+        str[i] = toupper(str[i]);
+    }
+}
 //<<<<<<< Updated upstream
 //=======
 
@@ -1154,6 +1115,7 @@ void trim_whitespace(char *str) {
 
 //MODIFICATIONS-----------------------------------------------------------------------------------------------------------------
 //list here::
+//1. 
     
     //new mod for displayList() function : 
     // displayList() : if possible the user should only input the name of the file without the .txt extension
