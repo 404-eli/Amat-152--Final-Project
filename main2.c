@@ -9,7 +9,6 @@
 #define MAX_LINE_LENGTH 100 //deleting records
 #define MAX_FILE_NAME 50    //displaying records
 #define MAX_BUFFER_SIZE 100 //displaying records
-
 #define MAX_FILENAME_LEN 100//search
 #define MAX_USERNAME_LEN 50//search
 #define MAX_LINE_LEN 1000//search
@@ -59,10 +58,8 @@ void deleterecords();
 
 //main functions-----------------------------------------------------------------------------------------------------------
 int main(){
-
     displayMessage();
     menu();
-
     return 0;
 }
 
@@ -74,7 +71,6 @@ void displayMessage(){
 
 void menu(){
     int choice;
-
     while (1)
     {
         system("cls");
@@ -86,28 +82,19 @@ void menu(){
         switch (choice)
         {
         case 'A':
-            logIn();
-            break;
+            logIn();break;
         case 'T':
-            logIn();
-            break;
+            logIn();break;
         case 'E':
-            printf("\n\nThank you for using our service!");
-            exit(0);
-            break;
+            printf("\n\nThank you for using our service!");exit(0);
         default:
-            printf("\n\nIncorrect Input");
-            printf("\nAny key to continue");
-            getch();
-            system("cls");
-            break;
+            printf("\n\nIncorrect Input\nAny key to continue");getch();break;
         }
     }
 }
 
 void adminPanel(){
     int choice;
-
 	while (1)
 	{
         system("cls");
@@ -122,37 +109,28 @@ void adminPanel(){
 		switch(choice)
 		{
 			case 'P':
-				payment();
-                break;
+				payment();break;
 			case 'A':
-				addTenantRecord();
-                break;
+				addTenantRecord();break;
 			case 'L':
-				displayList();
-                break;
+				displayList();break;
 			case 'N':
-				AddNextMonth();
-                break;
+				AddNextMonth();break;
 			case 'S':
-				searchFile();
-                break;
+				searchFile();break;
 			case 'D':
-				deleterecords();
-                break;
+				deleterecords();break;
 			case 'O':
-                system("cls");
-                logOut();
-				break;
+                system("cls");logOut();break;
 			default:
-				printf("\n\nIncorrect Input");
-				printf("\nAny key to continue");
-				getch();
+				printf("\n\nIncorrect Input\nAny key to continue");getch();
 		}
 	}
 }
 
 //ADD TENANT RECORDS ONLY---------------------------------------------------------------------------------------------------------
 void addTenantRecord() {
+	int i;
     FILE *record;
     record = fopen("tenant_records.txt", "a+");
     if (record == NULL) {
@@ -169,7 +147,7 @@ void addTenantRecord() {
         scanf("%s", tenant.username);
 
         // Convert username to uppercase
-        for (int i = 0; tenant.username[i]; i++) {
+        for (i = 0; tenant.username[i]; i++) {
             tenant.username[i] = toupper(tenant.username[i]);
         }
 
@@ -211,8 +189,7 @@ void addTenantRecord() {
             tenant.username, tenant.roomNumber, tenant.roomRate, tenant.waterBill, tenant.electricityBill, tenant.daysToPay, total_payment);
 
     fflush(stdin);
-    printf("\n1 record successfully added");
-    printf("\n Press any key to exit: ");
+    printf("\n 1 record successfully added\n Press any key to exit: ");
     getch();
     system("cls");
     fclose(record);
@@ -246,22 +223,16 @@ int displayList() {
 
         switch (choice) {
             case 1:
-                printFile();
-                break;
+                printFile();break;
             case 2:
-                listrecords();
-                break;
+                listrecords();break;
             case 3:
-                printf("\n\nReturning to MAIN MENU\nEnter any key to continue.");
-                getch();
-                break;
+                printf("\n\nReturning to MAIN MENU\nEnter any key to continue.");getch();break;
             default:
                 printf("Invalid choice. Please enter a valid option.\n");
         }
-
         // Consume newline character after reading the choice
         while (getchar() != '\n');
-
     } while (choice != 3);
 
     fclose(file);
@@ -340,7 +311,7 @@ void listrecords() {
     displayMessage();
     printf("\n\n\t\tTenant Database\n\n");
     printf("\n%-15s%-15s%-15s%-15s%15s\n", "Username", "Room Number", "Room Rate", "Days to Pay", "Total Payment");
-    for (i = 0; i < 100; i++)printf("=");
+    for (i = 0; i < 90; i++)printf("=");
     printf("\n");
 
     char line[256]; // Adjust the size based on your file's maximum line length
@@ -365,7 +336,7 @@ void listrecords() {
         printf("%-15s%-15s%-15s%-15s%10s\n", username, room_number, room_rate, days_to_pay, total_payment);
     }
 
-    for (i = 0; i < 100; i++)printf("=");
+    for (i = 0; i < 90; i++)printf("=");
 
     fclose(record);
     getchar(); // Consume newline character
@@ -375,17 +346,12 @@ void listrecords() {
 //SEARCH FUNCTION----------------------------------------------------------------------------------------------------------------------
 int searchFile() {
     int choice;
-
     do {
         system("cls");
         displayMessage();
         printf("\nChoose an option:\n");
-        printf("1. Search Tenant Records File\n");
-        printf("2. Search Monthly Records File\n");
-        printf("3. Exit\n");
-        printf("Enter your choice: ");
+        printf("1. Search Tenant Records File\n2. Search Monthly Records File\n3. Exit\nEnter your choice: ");
         scanf("%d", &choice);
-
         switch (choice) {
             case 1:
                 searchrecords();//FOR MAIN RECORDS
@@ -399,9 +365,7 @@ int searchFile() {
             default:
                 printf("Invalid choice. Please enter a valid option.\n");
         }
-
     } while (choice != 3);
-
     return 0;
 }
 
@@ -926,6 +890,7 @@ void AddNextMonth() {
 //END----------------------------------------------------------------------------------------------------------------------------
 
 
+
 //TENANT PANEL------------------------------------------------------------------------------------------------------------------------------
 void tenantPanel(){
     int choice;
@@ -1078,7 +1043,7 @@ void writeHeader(FILE *record, const char *header) {
 
 // Trim leading and trailing whitespaces from a string
 void trim_whitespace(char *str) {
-    int start = 0, end = strlen(str) - 1;
+    int start = 0, end = strlen(str) - 1, i;
 
     while (isspace((unsigned char)str[start])) {
         start++;
@@ -1088,7 +1053,6 @@ void trim_whitespace(char *str) {
         end--;
     }
 
-    int i;
     for (i = start; i <= end; i++) {
         str[i - start] = str[i];
     }
@@ -1097,7 +1061,8 @@ void trim_whitespace(char *str) {
 }
 
 void toUpperCase(char *str) {
-    for (int i = 0; str[i]; i++) {
+	int i;
+    for (i = 0; str[i]; i++) {
         str[i] = toupper(str[i]);
     }
 }
