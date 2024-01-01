@@ -5,7 +5,6 @@
 
 void addTenantRecord();
 void trim_whitespace(char *str);
-int countRoomNumberOccurrences(const char *roomNumber);
 
 int main() {
     addTenantRecord();
@@ -14,7 +13,7 @@ int main() {
 
 void addTenantRecord() {
     FILE *record;
-    record = fopen("tenant_records.txt", "a+");
+    record = fopen("tenant_records1.txt", "a+");
     if (record == NULL) {
         printf("Error opening file for writing.\n");
         return;
@@ -66,8 +65,23 @@ void addTenantRecord() {
     printf("Enter Electriity Bill: ");
     scanf("%f", &tenant.electricityBill);
 
-    printf("Enter Number of Days to Pay: ");
-    scanf("%d", &tenant.daysToPay);
+
+    while (1) {
+        printf("Enter Number of Days to Pay: ");
+        int result = scanf("%d", &tenant.daysToPay);
+
+        if (result == 1) {
+            // Successful integer input
+            break;
+        } else {
+            // Clear the input buffer
+            while (getchar() != '\n');
+
+            // Prompt user for valid input
+            printf("Invalid input. Please enter a valid integer.\n");
+        }
+    }
+    
 
     // Calculate total_payment by multiplying room_rate and days_to_pay, then adding electricity and water
     float total_payment = tenant.roomRate * tenant.daysToPay + tenant.waterBill + tenant.electricityBill;
@@ -108,40 +122,9 @@ void trim_whitespace(char *str) {
     str[i - start] = '\0';
 }
 
-int countRoomNumberOccurrences(const char *roomNumber) {
-    FILE *file = fopen("tenant_records.txt", "r");
-
-    if (file == NULL) {
-        printf("Error opening the file.\n");
-        return 0; // Return 0 assuming the file doesn't exist or there was an error
-    }
-
-    // Skip the first line (header)
-    char line[256];
-    if (fgets(line, sizeof(line), file) == NULL) {
-        fclose(file);
-        return 0; // Return 0 if there is an error reading the header
-    }
-
-    // Search for the room number in the records and count occurrences
-    int count = 0;
-    while (fgets(line, sizeof(line), file) != NULL) {
-        char *record_roomNumber = strtok(line, ",");
-        trim_whitespace(record_roomNumber);
-
-        // Compare with the provided room number
-        if (strcmp(record_roomNumber, roomNumber) == 0) {
-            count++;
-        }
-    }
-
-    fclose(file);
-    return count;
-}
-
 
 int isUsernameExists(const char *username) {
-    FILE *file = fopen("tenant_records.txt", "r");
+    FILE *file = fopen("tenant_records1.txt", "r");
 
     if (file == NULL) {
         printf("Error opening the file.\n");

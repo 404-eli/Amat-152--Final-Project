@@ -1,128 +1,123 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <conio.h>
 #include <string.h>
 #include <ctype.h>
+#include "struct.h"
 
-#define MAX_RECORDS 1000
-#define MAX_LINE_LENGTH 256
-
-typedef struct {
-    char username[256];
-    char room_number[256];
-    char room_rate[256];
-    char num_of_tenants[256];
-    char electricity[256];
-    char water[256];
-    char days_to_pay[256];
-    float total_payment;
-} TenantRecord;
-
-void payment();
+void nextMonth();
+void AddNextMonth();
 void trim_whitespace(char *str);
-void readRecords(FILE *file, TenantRecord records[], int *numRecords);
-void writeRecords(FILE *file, TenantRecord records[], int numRecords);
 
 int main() {
-    payment();
+    AddNextMonth();
+
     return 0;
 }
 
-void payment() {
-    FILE *file = fopen("tenant_records.txt", "r+");
+void toUpperCase(char *str) {
+    for (int i = 0; str[i]; i++) {
+        str[i] = toupper(str[i]);
+    }
+}
+
+
+void AddNextMonth() {
+    char month[10], year[5];
+    char fileName[50];
+
+    FILE *file = fopen("tenant_records.txt", "r");
+    FILE *newFile, *nameContainerFile;
+
     if (file == NULL) {
-        printf("Error opening the file.\n");
-        return;
-    }
+        perror("\n\nError opening the file.\n");
+        printf("\nAny key to continue");
+        getch();
+    } else {
+        // Get input for the month
+        system("cls");
+        // displayMessage();
+        printf("\nEnter the month: ");
+        scanf("%s", month);
+        toUpperCase(month);
+        printf("Enter year: ");
+        scanf("%s", year);
 
-    TenantRecord records[MAX_RECORDS];
-    int numRecords = 0;
+        // Construct the file name with the format "monthyear.txt"
+        snprintf(fileName, sizeof(fileName), "%s%s.txt", month, year);
 
-    char username_search[256];
-
-    // Get input for search
-    printf("Enter username: ");
-    fgets(username_search, sizeof(username_search), stdin);
-    username_search[strcspn(username_search, "\n")] = '\0';  // Remove the newline character
-
-    // Read records from the file into memory
-    readRecords(file, records, &numRecords);
-
-    // Search for the record
-    int record_found = 0;
-
-    // Find the record to update
-    for (int i = 0; i < numRecords; i++) {
-        if (strcmp(records[i].username, username_search) == 0) {
-            // Display the found record along with total_payment
-            printf("%-15s%-15s%-15s%-18s%-10s%-10s%-20s\n", "Username", "Room Number", "Room Rate", "Num of Tenants", "Bill", "Days to Pay", "Total Payment");
-
-            float bill = atof(records[i].electricity) + atof(records[i].water);
-            printf("%-15s%-15s%-15s%-18s%-10.2f%-15s%-20.2f\n", records[i].username, records[i].room_number, records[i].room_rate, records[i].num_of_tenants, bill, records[i].days_to_pay, records[i].total_payment);
-            record_found = 1;
-
-            // Get payment input from the user
-            float payment_amount;
-            printf("\nEnter payment amount: ");
-            scanf("%f", &payment_amount);
-
-            // Deduct payment_amount from total_payment
-            records[i].total_payment -= payment_amount;
-
-            // Update the total_payment in the file
-            fseek(file, 0, SEEK_SET);
-            writeRecords(file, records, numRecords);
-
-            break;
-        }
-    }
-
-    if (!record_found) {
-        printf("Record not found.\n");
-    }
-
-    fclose(file);
-}
-
-void readRecords(FILE *file, TenantRecord records[], int *numRecords) {
-    char line[MAX_LINE_LENGTH];
-
-    // Skip the header
-    if (fgets(line, sizeof(line), file) == NULL) {
-        printf("Error reading the header.\n");
-        return;
-    }
-
-    while (fgets(line, sizeof(line), file) != NULL) {
-        // Check if fgets successfully reads a line
-        if (line[0] == '\n' || line[0] == '\0') {
-            continue;
+        // Open a new file for writing
+        newFile = fopen(fileName, "w");
+        if (newFile == NULL) {
+            perror("Error creating new file");
         }
 
-        sscanf(line, "%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%f",
-               records[*numRecords].username,
-               records[*numRecords].room_number,
-               records[*numRecords].room_rate,
-               records[*numRecords].num_of_tenants,
-               records[*numRecords].electricity,
-               records[*numRecords].water,
-               records[*numRecords].days_to_pay,
-               &records[*numRecords].total_payment);
+        // Open the name container file for appending
+        nameContainerFile = fopen("name_container.txt", "a");
+        if (nameContainerFile == NULL) {
+            perror("Error opening name container file");
+            exit(EXIT_FAILURE);
+        }
 
-        // Trim whitespaces from the found record values
-        trim_whitespace(records[*numRecords].username);
+        char line[256];
 
-        (*numRecords)++;
+        // Skip the first line (header)
+        if (fgets(line, sizeof(line), file) == NULL) {
+            printf("Error reading the header.\n");
+            fclose(file);
+            return;
+        }
+
+        // Write the header to the new file
+        fprintf(newFile, "%s", line);
+
+        // Iterate through all records in the file
+        while (fgets(line, sizeof(line), file) != NULL) {
+            char *record_username = strtok(line, ",");
+            char *room_number = strtok(NULL, ",");
+            char *room_rate = strtok(NULL, ",");
+            char *electricity = strtok(NULL, ",");
+            char *water = strtok(NULL, ",");
+            char *days_to_pay = strtok(NULL, ",");
+            float total_payment = atof(strtok(NULL, "\n"));  // Retrieve total_payment as a float
+
+            // Trim whitespaces from the found record values
+            trim_whitespace(record_username);
+
+            // Display the record details
+            printf("%-15s%-15s%-15s%-10s%-10s%15s\n", "Username", "Room Number", "Room Rate", "Bill", "Days to Pay", "Total Payment");
+            float bill = atof(electricity) + atof(water);
+            printf("%-15s%-15s%-15s%-10.2f%-15s%10.2f\n", record_username, room_number, room_rate, bill, days_to_pay, total_payment);
+
+            // Get new electricity and water bill values from the user
+            float new_electricity, new_water;
+            int new_daystopay;
+            printf("\nEnter new electricity bill for %s: ", record_username);
+            scanf("%f", &new_electricity);
+            printf("Enter new water bill for %s: ", record_username);
+            scanf("%f", &new_water);
+            printf("Enter how many days %s would pay: ", record_username);
+            scanf("%d", &new_daystopay);
+
+            float new_bill = new_electricity + new_water;
+            float new_total_payment = new_bill + (atof(room_rate) * new_daystopay);
+
+            // Append the modified record to the new file
+            fprintf(newFile, "%s,%s,%s,%.2f,%.2f,%d,%.2f\n", record_username, room_number, room_rate, new_electricity, new_water, new_daystopay, new_total_payment);
+
+            // Write the new file name to the name container file
+            fprintf(nameContainerFile, "%s\n", fileName);
+        }
+
+        printf("\nNew file '%s' created successfully.\n", fileName);
+
+        // Close the files
+        fclose(file);
+        fclose(newFile);
+        fclose(nameContainerFile);
     }
 }
 
-void writeRecords(FILE *file, TenantRecord records[], int numRecords) {
-    fprintf(file, "%-5s,%-5s,%-5s,%-5s,%-5s,%-5s,%-5s\n", "Username", "Room Number", "Room Rate", "Num of Tenants", "Bill", "Days to Pay", "Total Payment");
-
-    for (int i = 0; i < numRecords; i++) {
-        float bill = atof(records[i].electricity) + atof(records[i].water);
-        fprintf(file, "%-5s,%-5s,%-5s,%-5s,%-5.2f,%-5s,%-5.2f\n", records[i].username, records[i].room_number, records[i].room_rate, records[i].num_of_tenants, bill, records[i].days_to_pay, records[i].total_payment);
-    }
-}
 
 void trim_whitespace(char *str) {
     int start = 0, end = strlen(str) - 1;
