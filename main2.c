@@ -16,12 +16,12 @@
 void displayMessage();//done
 void menu();//done
 void writeHeader(FILE *record, const char *header);//allowed
-int isUsernameExists(const char *username);
+int isNameExists(const char *filename, const char *name);
 void trim_whitespace(char *str);//remove later
 void toUpperCase(char *str);
 
 //tenant panel functions----------------------------------------------------------------------------------------------------
-void tenantPanel();
+void tenantPanel(char *username);
 //can be found on both 
 void logIn();//partially done
 void logOut();//done
@@ -132,6 +132,7 @@ void adminPanel(){
 void addTenantRecord() {
 	int i;
     FILE *record;
+    FILE *info;
     record = fopen("tenant_records.txt", "a+");
     if (record == NULL) {
         printf("Error opening file for writing.\n");
@@ -139,60 +140,46 @@ void addTenantRecord() {
     }
 
     system("cls");
-    displayMessage();
+    // displayMessage();
     printf("\nEntering for Tenants Database: \n\n");
     // Get input for username and check for existing username
     do {
         printf("Enter Username: ");
-        scanf("%s", tenant.username);
-
-        // Convert username to uppercase
-        for (i = 0; tenant.username[i]; i++) {
-            tenant.username[i] = toupper(tenant.username[i]);
-        }
-
+        scanf("%s", tenant.username); toUpperCase(tenant.username);
         // Check if the username already exists
-        if (isUsernameExists(tenant.username)) {
+        if (isNameExists("tenant_records.txt", tenant.username)) {
             printf("Username already exists. Please enter a different username.\n");
         }
-    } while (isUsernameExists(tenant.username));
+    } while (isNameExists("tenant_records.txt", tenant.username));
 
     // Get input for other fields
     printf("Enter Room Number: ");
-    scanf("%s", tenant.roomNumber);
+    scanf("%s", tenant.roomNumber); toUpperCase(tenant.roomNumber);
 
-    // Convert room number to uppercase
-    toUpperCase(tenant.roomNumber);
-
-    printf("Enter Room Rate: ");
-    scanf("%d", &tenant.roomRate);//aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa I edited from f to d
-
-    printf("Enter Water Bill: ");
-    scanf("%f", &tenant.waterBill);
-
-    printf("Enter Electriity Bill: ");
-    scanf("%f", &tenant.electricityBill);
-
-    printf("Enter Number of Days to Pay: ");
-    scanf("%d", &tenant.daysToPay);
+    while ((printf("Enter Room Rate: ") && scanf("%d", &tenant.roomRate) == 1) ? (fflush(stdin), 0) : (printf("Invalid Input: Enter a number.\n") && fflush(stdin), 1));
+    while ((printf("Enter Water Bill: ") && scanf("%f", &tenant.waterBill) == 1) ? 0 : (printf("Invalid Input: Enter a number.\n") && fflush(stdin), 1));
+    while ((printf("Enter Electricity Bill: ") && scanf("%f", &tenant.electricityBill) == 1) ? 0 : (printf("Invalid Input: Enter a number.\n") && fflush(stdin), 1));
+    while ((printf("Enter Number of Days to Pay: ") && scanf("%d", &tenant.daysToPay) == 1) ? (fflush(stdin), 0) : (printf("Invalid Input: Enter a number.\n") && fflush(stdin)));
 
     // Calculate total_payment by multiplying room_rate and days_to_pay, then adding electricity and water
     float total_payment = tenant.roomRate * tenant.daysToPay + tenant.waterBill + tenant.electricityBill;
 
-    fseek(record, 0, SEEK_END);
-    if (ftell(record) == 0) {
-        writeHeader(record, "Username, Room Number, Room Rate, Water Bill, Electricity Bill, Days to Pay, Total Payment");
-    }
-
+    writeHeader(record, "Username, Room Number, Room Rate, Water Bill, Electricity Bill, Days to Pay, Total Payment");
     // Append the record with the new total_payment column
     fprintf(record, "%s, %s, %d, %.2f, %.2f, %d, %.2f\n",
             tenant.username, tenant.roomNumber, tenant.roomRate, tenant.waterBill, tenant.electricityBill, tenant.daysToPay, total_payment);
 
-    fflush(stdin);
-    printf("\n 1 record successfully added\n Press any key to exit: ");
-    getch();
-    system("cls");
     fclose(record);
+
+    //write the log-in information
+    info = fopen("log_info.txt", "a+");
+    writeHeader(info, "Username, Password");
+    fprintf(info, "%s, %s\n", tenant.username, tenant.roomNumber);
+
+    fclose(info);
+    fflush(stdin);
+    printf("\n 1 record successfully added\n Press any key to exit: ");getch();
+    system("cls");
 }
 //END--------------------------------------------------------------------------------------------------------------------------------------
 
@@ -219,9 +206,10 @@ int displayList() {
         printf("2. Print Tenant Database\n");
         printf("3. Exit\n");
         printf("Enter your choice: ");
-        scanf("%d", &choice);
-
-        switch (choice) {
+        if (scanf("%d", &choice) == 1)
+        {
+            fflush(stdin);
+            switch (choice) {
             case 1:
                 printFile();break;
             case 2:
@@ -230,9 +218,12 @@ int displayList() {
                 printf("\n\nReturning to MAIN MENU\nEnter any key to continue.");getch();break;
             default:
                 printf("Invalid choice. Please enter a valid option.\n");
+            }
         }
-        // Consume newline character after reading the choice
-        while (getchar() != '\n');
+        else{
+            printf("Invalid Input: Please enter an integer.");
+            fflush(stdin);
+        }
     } while (choice != 3);
 
     fclose(file);
@@ -294,7 +285,7 @@ void printFile() {
     }
 
     fclose(file);
-    getchar();
+    getch();
 }
 
 // Function to list tenant records
@@ -351,20 +342,27 @@ int searchFile() {
         displayMessage();
         printf("\nChoose an option:\n");
         printf("1. Search Tenant Records File\n2. Search Monthly Records File\n3. Exit\nEnter your choice: ");
-        scanf("%d", &choice);
-        switch (choice) {
-            case 1:
-                searchrecords();//FOR MAIN RECORDS
-                break;
-            case 2:
-                searchMonthly();//FOR MONTHLY RECORDS
-                break;
-            case 3:
-                printf("Exiting program. Goodbye!\n");
-                break;
-            default:
-                printf("Invalid choice. Please enter a valid option.\n");
+        if (scanf("%d", &choice) == 1)
+        {
+            fflush(stdin);
+            switch (choice) {
+                case 1:
+                    searchrecords();//FOR MAIN RECORDS
+                    break;
+                case 2:
+                    searchMonthly();//FOR MONTHLY RECORDS
+                    break;
+                case 3:
+                    printf("Exiting program. Goodbye!\n");
+                    break;
+                default:
+                    printf("Invalid choice. Please enter a valid option.\n");
+            }
         }
+        else{
+            printf("Invalid input: Please enter an integer\n");
+        }
+
     } while (choice != 3);
     return 0;
 }
@@ -548,9 +546,10 @@ int payment_search(){
         printf("1. Payment for month\n");
         printf("2. Exit\n");
         printf("Enter your choice: ");
-        scanf("%d", &choice);
-
-        switch (choice) {
+        if (scanf("%d", &choice) == 0)
+        {
+            fflush(stdin);
+            switch (choice) {
             case 1:
                 payment();//FOR MAIN RECORDS
                 break;
@@ -559,8 +558,12 @@ int payment_search(){
                 break;
             default:
                 printf("Invalid choice. Please enter a valid option.\n");
+            }
         }
-
+        else{
+            printf("Invalid input: Please enter an integer.");
+            fflush(stdin);
+        }
     } while (choice != 2);
 
     return 0;
@@ -803,115 +806,127 @@ void AddNextMonth() {
         perror("\n\nError opening the file.\n");
         printf("\nAny key to continue");
         getch();
-    } else {
-        // Get input for the month
-        system("cls");
-        // displayMessage();
-        printf("\nEnter the month: ");
-        scanf("%s", month);
-        toUpperCase(month);
-        printf("Enter year: ");
-        scanf("%s", year);
-
-        // Construct the file name with the format "monthyear.txt"
-        snprintf(fileName, sizeof(fileName), "%s%s.txt", month, year);
-
-        // Open a new file for writing
-        newFile = fopen(fileName, "w");
-        if (newFile == NULL) {
-            perror("Error creating new file");
-        }
-
-        // Open the name container file for appending
-        nameContainerFile = fopen("name_container.txt", "a");
-        if (nameContainerFile == NULL) {
-            perror("Error opening name container file");
-            exit(EXIT_FAILURE);
-        }
-
-        char line[256];
-
-        // Skip the first line (header)
-        if (fgets(line, sizeof(line), file) == NULL) {
-            printf("Error reading the header.\n");
-            fclose(file);
-            return;
-        }
-
-        // Write the header to the new file
-        fprintf(newFile, "%s", line);
-
-        // Iterate through all records in the file
-        while (fgets(line, sizeof(line), file) != NULL) {
-            char *record_username = strtok(line, ",");
-            char *room_number = strtok(NULL, ",");
-            char *room_rate = strtok(NULL, ",");
-            char *electricity = strtok(NULL, ",");
-            char *water = strtok(NULL, ",");
-            char *days_to_pay = strtok(NULL, ",");
-            float total_payment = atof(strtok(NULL, "\n"));  // Retrieve total_payment as a float
-
-            // Trim whitespaces from the found record values
-            trim_whitespace(record_username);
-
-            // Display the record details
-            printf("%-15s%-15s%-15s%-10s%-10s%15s\n", "Username", "Room Number", "Room Rate", "Bill", "Days to Pay", "Total Payment");
-            float bill = atof(electricity) + atof(water);
-            printf("%-15s%-15s%-15s%-10.2f%-15s%10.2f\n", record_username, room_number, room_rate, bill, days_to_pay, total_payment);
-
-            // Get new electricity and water bill values from the user
-            float new_electricity, new_water;
-            int new_daystopay;
-            printf("\nEnter new electricity bill for %s: ", record_username);
-            scanf("%f", &new_electricity);
-            printf("Enter new water bill for %s: ", record_username);
-            scanf("%f", &new_water);
-            printf("Enter how many days %s would pay: ", record_username);
-            scanf("%d", &new_daystopay);
-
-            float new_bill = new_electricity + new_water;
-            float new_total_payment = new_bill + (atof(room_rate) * new_daystopay);
-
-            // Append the modified record to the new file
-            fprintf(newFile, "%s,%s,%s,%.2f,%.2f,%d,%.2f\n", record_username, room_number, room_rate, new_electricity, new_water, new_daystopay, new_total_payment);
-
-            // Write the new file name to the name container file
-            fprintf(nameContainerFile, "%s\n", fileName);
-        }
-
-        printf("\nNew file '%s' created successfully.\n", fileName);
-
-        // Close the files
-        fclose(file);
-        fclose(newFile);
-        fclose(nameContainerFile);
+        return;
     }
+    // Get input for the month
+    system("cls");
+    // displayMessage();
+    printf("\nEnter the month: ");
+    scanf("%s", month);
+    toUpperCase(month);
+    printf("Enter year: ");
+    scanf("%s", year);
+
+    // Construct the file name with the format "monthyear.txt"
+    snprintf(fileName, sizeof(fileName), "%s%s.txt", month, year);
+
+    // Open the name container file for appending
+    nameContainerFile = fopen("name_container.txt", "a+");
+    if (nameContainerFile == NULL) {
+        perror("Error opening name container file");
+        fclose(nameContainerFile);  // Close the file before returning
+        return;
+    }
+
+    // Check if the file already exists in name_container.txt
+    if (isNameExists("name_container.txt", fileName) == 1) {
+        printf("Error: File '%s' already exists in name_container.txt.\n", fileName);
+        fclose(nameContainerFile);  // Close the file before returning
+        return;
+    }
+
+    // Open a new file for writing fileName = MONTHYEAR.txt
+    newFile = fopen(fileName, "w");
+    if (newFile == NULL) {
+        perror("Error creating new file");
+        fclose(nameContainerFile);  // Close the name container file before returning
+        return;
+    }
+
+
+    char line[256];
+
+    // Skip the first line (header)
+    if (fgets(line, sizeof(line), file) == NULL) {
+        printf("Error reading the header.\n");
+        fclose(file);
+        return;
+    }
+
+    // Write the header to the new file
+    fprintf(newFile, "%s", line);
+    fprintf(nameContainerFile, "%s,\n", fileName);
+
+    // Iterate through all records in the file
+    while (fgets(line, sizeof(line), file) != NULL) {
+        char *record_username = strtok(line, ",");
+        char *room_number = strtok(NULL, ",");
+        char *room_rate = strtok(NULL, ",");
+        char *electricity = strtok(NULL, ",");
+        char *water = strtok(NULL, ",");
+        char *days_to_pay = strtok(NULL, ",");
+        float total_payment = atof(strtok(NULL, "\n"));  // Retrieve total_payment as a float
+
+        // Trim whitespaces from the found record values
+        trim_whitespace(record_username);
+
+        // Display the record details
+        printf("%-15s%-15s%-15s%-10s%-10s%15s\n", "Username", "Room Number", "Room Rate", "Bill", "Days to Pay", "Total Payment");
+        float bill = atof(electricity) + atof(water);
+        printf("%-15s%-15s%-15s%-10.2f%-15s%10.2f\n", record_username, room_number, room_rate, bill, days_to_pay, total_payment);
+
+        // Get new electricity and water bill values from the user
+        float new_electricity, new_water;
+        int new_daystopay;
+        printf("\nEnter new electricity bill for %s: ", record_username);
+        scanf("%f", &new_electricity);
+        printf("Enter new water bill for %s: ", record_username);
+        scanf("%f", &new_water);
+        printf("Enter how many days %s would pay: ", record_username);
+        scanf("%d", &new_daystopay);
+
+        float new_bill = new_electricity + new_water;
+        float new_total_payment = new_bill + (atof(room_rate) * new_daystopay);
+
+        // Append the modified record to the new file
+        fprintf(newFile, "%s,%s,%s,%.2f,%.2f,%d,%.2f\n", record_username, room_number, room_rate, new_electricity, new_water, new_daystopay, new_total_payment);
+    }
+
+    printf("\nNew file '%s' created successfully.\n", fileName);
+
+    // Close the files
+    fclose(file);
+    fclose(newFile);
+    fclose(nameContainerFile);
 }
 //END----------------------------------------------------------------------------------------------------------------------------
 
 
-
 //TENANT PANEL------------------------------------------------------------------------------------------------------------------------------
-void tenantPanel(){
+void tenantPanel(char *username){
     int choice;
+    char month[10], year[5];
+    char filename[20];
 
     while (1)
     {
         system("cls");
         displayMessage();
-        printf(" B : See Balance\n O : Log out\nChoice: ");
+        printf(" B : See Monthly Balance\n O : Log out\nChoice: ");
         choice = getche();
         choice = toupper(choice);
         switch (choice)
         {
         case 'B':
-            printf("Undergoing!");
-            system("cls");
-            menu();
+            printf("\nEnter month: ");scanf("%s", month);toUpperCase(month);
+            printf("Enter year: ");scanf("%s", year);
+            snprintf(filename, sizeof(filename), "%s%s.txt", month, year);
+            printf("%s", filename);
+            searchByUsername(filename, username);
             break;
         case 'O':
             system("cls");
-            logOut();
+            logIn();
             break;
         default:
             printf("\n\nIncorrect Input");
@@ -920,51 +935,60 @@ void tenantPanel(){
             break;
         }
     }
+
+    menu();
 }
 
 //LOGIN---------------------------------------------------------------------------------------------------------------------------
-void logIn(){
-    char admin_val[] = "admin";
-    char username_user[] = "user", username_in[10];
+void logIn() {
+    FILE *login_info = fopen("log_info.txt", "r");
+    char admin[] = "admin";
+    char username_in[10];
+    char password_in[10];
+    char buffer[256];
+    int found = 0;
 
-    char user_pass[] = "22F5";
-    char password_in[10]; 
     system("cls");
+    displayMessage();
+    printf("Enter username: ");
+    scanf("%s", username_in);
+    printf("Enter password: ");
+    scanf("%s", password_in);
 
-    while (1)
-    {
-        displayMessage();
-        printf("Enter username: ");
-        scanf("%s", &username_in);
-        printf("Enter password: ");
-        scanf("%s", &password_in);
+    if (fgets(buffer, sizeof(buffer), login_info) == NULL) {
+        printf("Error reading the header.\n");
+        fclose(login_info);
+        return;
+    }
 
-        if (strcmp(admin_val, username_in) == 0)
-        {
-            if (strcmp(ADMIN_PASSWORD, password_in) == 0)
-            {
-                adminPanel();
-            }
-            else{
-                tryAgain();
-            }//optimize
-        }
+    while (fgets(buffer, sizeof(buffer), login_info) != NULL) {
+        char *record_username = strtok(buffer, ",");
+        char *room_number = strtok(NULL, "\n");
 
-        else if (strcmp(username_user, username_in) == 0)
-        {
-            if (strcmp(user_pass, password_in) == 0)
-            {
-                tenantPanel();
-            }
-            else{
-                tryAgain();
-            }
-        }
+        // Trim whitespaces from the found record values
+        trim_whitespace(record_username);
+        trim_whitespace(room_number);
+        trim_whitespace(username_in);
+        trim_whitespace(password_in);
 
-        else{
-            tryAgain();
+        if (strcmp(record_username, username_in) == 0 && strcmp(room_number, password_in) == 0) {
+            found = 1;
+            break;
         }
     }
+
+    fclose(login_info);
+
+    if (found) {
+        tenantPanel(username_in);
+    } 
+    else if (strcmp(username_in, admin) == 0 && strcmp(password_in, ADMIN_PASSWORD) == 0)
+    {
+        adminPanel();
+    }
+    else {
+        tryAgain();
+    }   
 }
 
 void logOut(){
@@ -1002,32 +1026,34 @@ void tryAgain(){
 }
 //END----------------------------------------------------------------------------------------------------------------------------------
 
-
-
-
 //additional functions----------------------------------------------------------------------------------------------------------------------
-int isUsernameExists(const char *username) {
-    FILE *file = fopen("tenant_records.txt", "r");
+int isNameExists(const char *filename, const char *name) {
+    FILE *file = fopen(filename, "r");
 
     if (file == NULL) {
         printf("Error opening the file.\n");
         return 0; // Return 0 assuming the file doesn't exist or there was an error
     }
 
-    // Skip the first line (header)
     char line[256];
-    if (fgets(line, sizeof(line), file) == NULL) {
-        fclose(file);
-        return 0; // Return 0 if there is an error reading the header
+
+    // Skip the first line (header) of files other than name_container.txt which has no header
+    if (strcmp(filename, "name_container.txt") == 1)  
+    {
+        
+        if (fgets(line, sizeof(line), file) == NULL) {
+            fclose(file);
+            return 0; // Return 0 if there is an error reading the header
+        }
     }
 
     // Search for the username in the records
     while (fgets(line, sizeof(line), file) != NULL) {
-        char *record_username = strtok(line, ",");
-        trim_whitespace(record_username);
+        char *record_name = strtok(line, ",");
+        trim_whitespace(record_name);
 
         // Compare with the provided username
-        if (strcmp(record_username, username) == 0) {
+        if (strcmp(record_name, name) == 0) {
             fclose(file);
             return 1; // Return 1 if the username already exists
         }
@@ -1038,7 +1064,10 @@ int isUsernameExists(const char *username) {
 }
 
 void writeHeader(FILE *record, const char *header) {
-    fprintf(record, "%s\n", header);
+    fseek(record, 0, SEEK_END);
+    if (ftell(record) == 0) {
+        fprintf(record, "%s\n", header);
+    }
 }
 
 // Trim leading and trailing whitespaces from a string
