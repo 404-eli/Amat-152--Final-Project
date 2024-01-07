@@ -6,6 +6,7 @@
 #include "struct.h"
 
 #define ADMIN_PASSWORD "admin123"
+#define ADMIN_USERNAME "admin"
 #define MAX_LINE_LENGTH 100 //deleting records
 #define MAX_FILE_NAME 50    //displaying records
 #define MAX_BUFFER_SIZE 100 //displaying records
@@ -955,6 +956,10 @@ void logIn() {
     printf("Enter password: ");
     scanf("%s", password_in);
 
+    trim_whitespace(admin);
+    trim_whitespace(username_in);
+    trim_whitespace(password_in);
+
     if (fgets(buffer, sizeof(buffer), login_info) == NULL) {
         printf("Error reading the header.\n");
         fclose(login_info);
@@ -981,7 +986,7 @@ void logIn() {
 
     if (found) {
         tenantPanel(username_in);
-    } 
+    }
     else if (strcmp(username_in, admin) == 0 && strcmp(password_in, ADMIN_PASSWORD) == 0)
     {
         adminPanel();
