@@ -942,8 +942,8 @@ void tenantPanel(char *username){
 
 //LOGIN---------------------------------------------------------------------------------------------------------------------------
 void logIn() {
-    FILE *login_info = fopen("log_info.txt", "r");
     char admin[] = "admin";
+    char admin_pass[] = "admin123";
     char username_in[10];
     char password_in[10];
     char buffer[256];
@@ -955,45 +955,52 @@ void logIn() {
     scanf("%s", username_in);
     printf("Enter password: ");
     scanf("%s", password_in);
-
-    trim_whitespace(admin);
-    trim_whitespace(username_in);
-    trim_whitespace(password_in);
-
-    if (fgets(buffer, sizeof(buffer), login_info) == NULL) {
-        printf("Error reading the header.\n");
-        fclose(login_info);
-        return;
-    }
-
-    while (fgets(buffer, sizeof(buffer), login_info) != NULL) {
-        char *record_username = strtok(buffer, ",");
-        char *room_number = strtok(NULL, "\n");
-
-        // Trim whitespaces from the found record values
-        trim_whitespace(record_username);
-        trim_whitespace(room_number);
-        trim_whitespace(username_in);
-        trim_whitespace(password_in);
-
-        if (strcmp(record_username, username_in) == 0 && strcmp(room_number, password_in) == 0) {
-            found = 1;
-            break;
-        }
-    }
-
-    fclose(login_info);
-
-    if (found) {
-        tenantPanel(username_in);
-    }
-    else if (strcmp(username_in, admin) == 0 && strcmp(password_in, ADMIN_PASSWORD) == 0)
+    
+    if (strcmp(username_in, admin) == 0 && strcmp(password_in, ADMIN_PASSWORD) == 0)
     {
         adminPanel();
     }
-    else {
-        tryAgain();
-    }   
+
+    FILE *login_info = fopen("log_info.txt", "r");
+
+    if (login_info != NULL)
+    {
+        if (fgets(buffer, sizeof(buffer), login_info) == NULL) {
+            printf("Error reading the header.\n");
+            fclose(login_info);
+            return;
+        }
+
+        while (fgets(buffer, sizeof(buffer), login_info) != NULL) {
+            char *record_username = strtok(buffer, ",");
+            char *room_number = strtok(NULL, "\n");
+
+            // Trim whitespaces from the found record values
+            trim_whitespace(record_username);
+            trim_whitespace(room_number);
+            trim_whitespace(username_in);
+            trim_whitespace(password_in);
+
+            if (strcmp(record_username, username_in) == 0 && strcmp(room_number, password_in) == 0) {
+                found = 1;
+                break;
+            }
+        }
+
+        fclose(login_info);
+
+        if (found) {
+            tenantPanel(username_in);
+        }
+        else {
+            tryAgain();
+        } 
+    }
+    else{
+        printf("Invalid Log-in! Please wait for the admin\n");
+        getch();
+        fflush(stdin);
+    }
 }
 
 void logOut(){
